@@ -10,10 +10,8 @@
 # ============================================
 # FICHIERS SENSIBLES (NE JAMAIS COMMITER)
 # ============================================
-*.env
-.env
-.env.local
-.env.production
+# Les fichiers .env sont inclus pour simplifier l'installation
+# Aucune donnee confidentielle dans ces fichiers
 
 # ============================================
 # PYTHON
