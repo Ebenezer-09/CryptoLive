@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # ZOOKEEPER - Coordination Kafka
+  # ============================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - binance-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # KAFKA - Message Broker
+  # ============================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 1
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+    networks:
+      - binance-network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  # ============================================
+  # PRODUCER - Consommation API Binance
+  # ============================================
+  producer:
+    build:
+      context: ./backend/kafka_producer
+      dockerfile: Dockerfile
+    container_name: binance-producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      BINANCE_SYMBOLS: BTCUSDT,ETHUSDT
+    networks:
+      - binance-network
+    restart: unless-stopped
+
+  # ============================================
+  # SPARK - Traitement Streaming
+  # ============================================
+  spark:
+    build:
+      context: ./backend/spark_processor
+      dockerfile: Dockerfile
+    container_name: spark-streaming
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPARK_MASTER: local[*]
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    networks:
+      - binance-network
+    volumes:
+      - ./backend/spark_processor/checkpoints:/app/checkpoints
+      - ./backend/spark_processor/data:/app/data
+    restart: unless-stopped
+
+  # ============================================
+  # API SERVER - WebSocket + REST
+  # ============================================
+  api-server:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    container_name: api-server
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC_TRADES: binance-stream
+      KAFKA_TOPIC_AGG: binance-agg
+    networks:
+      - binance-network
+    restart: unless-stopped
+
+  # ============================================
+  # FRONTEND - React Application
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: ws://localhost:8000/ws
+    networks:
+      - binance-network
+    restart: unless-stopped
+    depends_on:
+      - api-server
+
+networks:
+  binance-network:
+    driver: bridge
+
+volumes:
+  kafka-data:

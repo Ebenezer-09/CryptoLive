@@ -1,0 +1,65 @@
+# ============================================
+# PROJET SPARK - CRYPTOLIVE
+# ============================================
+# Developpe par:
+#   - BAKOUAN Ebenezer
+#   - KONE Aiman
+#   - PITROIPA Soraya
+# ============================================
+
+# ============================================
+# FICHIERS SENSIBLES (NE JAMAIS COMMITER)
+# ============================================
+*.env
+.env
+.env.local
+.env.production
+
+# ============================================
+# PYTHON
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# ============================================
+# NODE / FRONTEND
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+frontend/dist/
+frontend/build/
+
+# ============================================
+# SPARK (Dossiers generes par Docker)
+# ============================================
+backend/spark_processor/checkpoints/
+backend/spark_processor/data/
+*.log
+
+# ============================================
+# DOCKER
+# ============================================
+# Ne pas ignorer les Dockerfiles et docker-compose.yml
+
+# ============================================
+# IDE / EDITEURS
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ============================================
+# SYSTEME
+# ============================================
+Thumbs.db
