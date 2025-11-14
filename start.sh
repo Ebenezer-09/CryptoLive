@@ -18,7 +18,19 @@ if ! command -v docker &> /dev/null; then
     echo "[INFO] Installez Docker depuis: https://docs.docker.com/get-docker/"
     exit 1
 fi
-echo "[OK] Docker detecte"
+
+# Vérifier que Docker est bien démarré
+if ! docker info &> /dev/null; then
+    echo "[ERROR] Docker n'est pas demarre."
+    echo "[INFO] Veuillez demarrer Docker et reessayer."
+    echo ""
+    echo "[ACTION] Etapes a suivre:"
+    echo "  1. Demarrer Docker Desktop (ou service Docker)"
+    echo "  2. Attendre que Docker soit completement demarre"
+    echo "  3. Relancer ce script"
+    exit 1
+fi
+echo "[OK] Docker detecte et demarre"
 
 # Vérifier Docker Compose (V2 ou V1)
 echo "[CHECK] Detection de Docker Compose..."

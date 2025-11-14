@@ -13,7 +13,7 @@ echo.
 echo [INFO] Demarrage du systeme...
 echo.
 
-REM Verifier que Docker est installe
+REM Verifier Docker
 echo [CHECK] Verification de Docker...
 where docker >nul 2>nul
 if %errorlevel% neq 0 (
@@ -22,7 +22,21 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo [OK] Docker detecte
+
+REM Verifier que Docker est bien demarre
+docker info >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Docker Desktop n'est pas demarre.
+    echo [INFO] Veuillez demarrer Docker Desktop et reessayer.
+    echo.
+    echo [ACTION] Etapes a suivre:
+    echo   1. Ouvrir Docker Desktop
+    echo   2. Attendre que Docker soit completement demarre
+    echo   3. Relancer ce script
+    pause
+    exit /b 1
+)
+echo [OK] Docker detecte et demarre
 
 REM Detecter Docker Compose (V2 ou V1)
 echo [CHECK] Detection de Docker Compose...
