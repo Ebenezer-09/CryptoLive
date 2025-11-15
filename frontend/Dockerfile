@@ -1,7 +1,8 @@
 # ============================================
 # FRONTEND REACT - Development Mode
 # ============================================
-FROM node:18-alpine
+# Utilisation de Node.js 20 (requis par Vite 20.19+)
+FROM node:20-alpine
 
 WORKDIR /app
 
